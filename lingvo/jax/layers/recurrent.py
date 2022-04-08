@@ -67,6 +67,7 @@ class AutodiffCheckpointType(str, enum.Enum):
   SAVE_DOT_ONLY = 'save_dot_only'
   SAVE_DOT_WITH_NO_BATCH_DIM = 'save_dot_with_no_batch_dims'
   SAVE_DOT_FOR_MLPERF_200B = 'save_dot_for_mlperf_200b'
+  SAVE_CONTEXT_AND_OUT_PROJ = 'save_context_and_out_proj'
 
 
 def recurrent_func(theta: NestedMap, states_0: NestedMap, inputs: NestedMap,
@@ -416,6 +417,8 @@ def scan(carry_init: NestedMap,
       return jax.checkpoint_policies.save_only_these_names(
           'combined_qkv_proj', 'query_proj', 'value_proj', 'key_proj',
           'context', 'out_proj')
+    if checkpoint_policy == AutodiffCheckpointType.SAVE_CONTEXT_AND_OUT_PROJ:
+      return jax.checkpoint_policies.save_only_these_names('context', 'out_proj')
     assert checkpoint_policy == AutodiffCheckpointType.SAVE_NOTHING
     return jax.checkpoint_policies.nothing_saveable
 

@@ -393,6 +393,9 @@ def train_and_evaluate_spmd_model(
      total_num_params) = trainer_lib.partition_spmd_model(
          model_p, init_key, inputs_shape)
 
+    logging.info(f"partitioned_train_state: \n{partitioned_train_state}\n")
+    logging.info(f"partitioned_specs: \n{partitioned_specs}\n")
+
     partitioned_train_state = checkpoints.restore_checkpoint(
         partitioned_train_state,
         restore_checkpoint_task_dir,
@@ -496,6 +499,13 @@ def train_and_evaluate_spmd_model(
         logging.debug('  Retrieving inputs.')
         model_inputs = train_input_pipeline.get_next()
         logging.debug('  Retrieved inputs.')
+
+        if step_i in [20, 50]:
+          logging.info("Starting trace")
+          jax.profiler.start_trace(os.path.join(summary_base_dir, "profile"))
+        if step_i in [23, 53]:
+          logging.info("Stopping trace")
+          jax.profiler.stop_trace()
 
         logging.debug('  Performing train_step().')
         with jax.profiler.StepTraceAnnotation('train', step_num=step_i):

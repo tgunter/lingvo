@@ -168,24 +168,32 @@ def create_device_mesh(mesh_shape: Sequence[int]) -> np.ndarray:
     A np.ndarray of jax devices with mesh_shape as its shape that can be fed
     into jax.experimental.maps.mesh with good collective performance.
   """
+  logging.info("Entering create_device_mesh")
   local_jax_devices_from_process_0 = jax.local_devices(process_index=0)
   jax_devices = jax.devices()
   device_kind = jax_devices[-1].device_kind
+  logging.info(f"device_kind: {device_kind}")
   # TODO(zhangqiaorjc): Handle TPU versions other than v4 more generally.
   if device_kind == _TPU_V3:
+    logging.info(f"device_kind: {device_kind} == {_TPU_V3}")
     device_mesh = np.asarray(jax_devices).reshape(mesh_shape)
     if mesh_shape[-1] == 8:
       logging.info('Re-order TPUv3 device mesh for better performance.')
       perm = np.array([0, 1, 2, 3, 6, 7, 4, 5])
       device_mesh = device_mesh[:, :, perm]
+    logging.info(f"Returning device_mesh: {device_mesh}")
     return device_mesh
   elif device_kind == _TPU_V4:
+    logging.info(f"device_kind: {device_kind} == {_TPU_V4}")
     physical_mesh = _jax_devices_order_normalized(
         local_jax_devices_from_process_0, jax_devices)
     device_mesh, assignment = _create_device_mesh_for_tpu_v4(
         physical_mesh, mesh_shape)
     logging.info('_create_device_mesh_for_tpu_v4 assignment: %s', assignment)
+    logging.info(f"Returning device_mesh: {device_mesh}")
     return device_mesh
   else:
+    logging.info("In else branch of create_device_mesh")
     device_mesh = np.asarray(jax_devices).reshape(mesh_shape)
+    logging.info(f"Returning device_mesh: {device_mesh}")
     return device_mesh
